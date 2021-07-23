@@ -47,9 +47,9 @@ def DataSetGeneration (data , window , frequency):
 
 ## Seting the window set
 
-windows = [20,30 , 40]
+windows = [5,10,  20 , 40 , 60]
 
-freq = 20
+freq = 1
 
 ## Define the list for storing the performance
 
@@ -57,11 +57,15 @@ train_perfromance = []
 
 test_perfromance = []
 
+AnnualizedReturn = []
+
 AnnualizedSharpe = []
 
 CalmarRatio = []
 
 MaxDrawDown = []
+
+Weight = []
 
 for j in range(len(windows)):
 
@@ -84,11 +88,11 @@ for j in range(len(windows)):
     
     for i in range(N):
         
-        w = MaxSharpeRatio.Maximum_Sharpe_Ratio(look_back_ret[i])
+        w = RiskParty.risk_parity(look_back_ret[i])
         
         portfolio_weight.append(w)
         
-        ret.append(np.dot(w , coming_ret[i]))
+        ret.append(np.dot(w , coming_ret[i] - slip))
         
     ## Backtest Result
     
@@ -100,9 +104,9 @@ for j in range(len(windows)):
     
     test_ret_arr = ret_arr[int(length * test_size) : ]
         
-    train_cum_ret = np.cumprod(1 + train_ret_arr - slip)
+    train_cum_ret = np.cumprod(1 + train_ret_arr)
     
-    test_cum_ret = np.cumprod(1 + test_ret_arr - slip)
+    test_cum_ret = np.cumprod(1 + test_ret_arr)
     
     train_perfromance.append(train_cum_ret)
     
@@ -112,14 +116,16 @@ for j in range(len(windows)):
     
     test_mea = Performance.Measures(test_cum_ret)
     
-    AnnualizedSharpe.append([train_mea.Annualized_Sharpe() , test_mea.Annualized_Sharpe()])
-    CalmarRatio.append([train_mea.CalmarRatio() , test_mea.CalmarRatio() ])
+    AnnualizedReturn.append([train_mea.Annualized_GM(freq),test_mea.Annualized_GM(freq)])
+    AnnualizedSharpe.append([train_mea.Annualized_Sharpe(freq) , test_mea.Annualized_Sharpe(freq)])
+    CalmarRatio.append([train_mea.CalmarRatio(freq) , test_mea.CalmarRatio(freq) ])
     MaxDrawDown.append([train_mea.MaxDrawDown() , test_mea.MaxDrawDown()])
+    Weight.append(portfolio_weight)
     
     
 ## Exporting the Graphs
 
-name = ["lookback_period:20" , "lookback_period:30" , "lookback_period:40" ]
+name = ["lookback_period:5" , "lookback_period:10", "lookback_period:20" , "lookback_period:40" , "lookback_period:60"]
 
 ## Prepare the benchmark
 
@@ -128,6 +134,8 @@ branchmark_ret = VOO_ret_df['adjclose']
 branchmark_train_perfromance = []
 
 branchmark_test_perfromance = []
+
+Branchmark_AnnualizedReturn = []
 
 Branchmark_AnnualizedSharpe = []
 
@@ -155,8 +163,9 @@ for h in range(len(windows)):
     
     test_mea = Performance.Measures(test_cum_ret)
     
-    Branchmark_AnnualizedSharpe.append([train_mea.Annualized_Sharpe() , test_mea.Annualized_Sharpe()])
-    Branchmark_CalmarRatio.append([train_mea.CalmarRatio() , test_mea.CalmarRatio() ])
+    Branchmark_AnnualizedReturn.append([train_mea.Annualized_GM(freq),test_mea.Annualized_GM(freq)])
+    Branchmark_AnnualizedSharpe.append([train_mea.Annualized_Sharpe(freq) , test_mea.Annualized_Sharpe(freq)])
+    Branchmark_CalmarRatio.append([train_mea.CalmarRatio(freq) , test_mea.CalmarRatio(freq) ])
     Branchmark_MaxDrawDown.append([train_mea.MaxDrawDown() , test_mea.MaxDrawDown()])
     
 for k in range(len(name)):
@@ -179,11 +188,15 @@ for k in range(len(name)):
     plt.savefig(name[k])
     plt.show()
     
-## Export the Measure Results
+## Export the Measure Results 
 
+AnnualizedReturn_df = pd.DataFrame(AnnualizedReturn)
 AnnualizedSharpe_df = pd.DataFrame(AnnualizedSharpe)
 CalmarRatio_df = pd.DataFrame(CalmarRatio)
 MaxDrawDown_df = pd.DataFrame(MaxDrawDown)
+
+AnnualizedReturn_df.index = name
+AnnualizedReturn_df.columns = ['Train' , 'Test']
 
 AnnualizedSharpe_df.index = name
 AnnualizedSharpe_df.columns = ['Train' , 'Test']
@@ -194,10 +207,13 @@ CalmarRatio_df.columns = ['Train' , 'Test']
 MaxDrawDown_df.index = name
 MaxDrawDown_df.columns = ['Train' , 'Test']
 
-
+Branchmark_AnnualizedReturn_df = pd.DataFrame(Branchmark_AnnualizedReturn)
 Branchmark_AnnualizedSharpe_df = pd.DataFrame(Branchmark_AnnualizedSharpe)
 Branchmark_CalmarRatio_df = pd.DataFrame(Branchmark_CalmarRatio)
 Branchmark_MaxDrawDown_df = pd.DataFrame(Branchmark_MaxDrawDown)
+
+Branchmark_AnnualizedReturn_df.index = name
+Branchmark_AnnualizedReturn_df.columns = ['Train' , 'Test']
 
 Branchmark_AnnualizedSharpe_df.index = name
 Branchmark_AnnualizedSharpe_df.columns = ['Train' , 'Test']
@@ -208,13 +224,22 @@ Branchmark_CalmarRatio_df.columns = ['Train' , 'Test']
 Branchmark_MaxDrawDown_df.index = name
 Branchmark_MaxDrawDown_df.columns = ['Train' , 'Test']
 
+AnnualizedReturn_df.to_csv('Return.csv')
 AnnualizedSharpe_df.to_csv('Sharpe.csv')
 CalmarRatio_df.to_csv('Calmar.csv')
 MaxDrawDown_df.to_csv('MaxDrawDown.csv')
 
+Branchmark_AnnualizedReturn_df.to_csv('Benrchmark_Return.csv')
 Branchmark_AnnualizedSharpe_df.to_csv('Benrchmark_Sharpe.csv')
 Branchmark_CalmarRatio_df.to_csv('Branchmark_Calmar.csv')
 Branchmark_MaxDrawDown_df.to_csv('Branchmark_MaxDrawDown.csv')
+
+## Export The Weight
+
+for i in range(len(Weight)):
+    
+    Weight_df = pd.DataFrame(Weight[i])
+    Weight_df.to_csv(name[i]+'.csv')
 
 
 

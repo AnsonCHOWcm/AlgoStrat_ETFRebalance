@@ -17,21 +17,21 @@ class Measures :
     def Cumulative_Return(self):
         return(self.data[-1]/self.data[0] -1)
     
-    def Annualized_GM(self):
-        return ((self.data[-1]/self.data[0])**(365/(len(self.data)-1))-1)
+    def Annualized_GM(self , freq):
+        return (self.data[-1]/self.data[0])**(252/((len(self.data)-1)*freq))-1
     
-    def Annualized_Vol(self):
+    def Annualized_Vol(self , freq):
         ret = np.log(self.data[1:]/self.data[:-1])-1
-        return(np.std(ret) * 16)
+        return(np.std(ret) * np.sqrt(252/freq))
     
-    def Annualized_Sharpe(self):
-        return((self.Annualized_GM()-(0.016/12))/self.Annualized_Vol())
+    def Annualized_Sharpe(self , freq):
+        return((self.Annualized_GM(freq)-(0.016/12))/self.Annualized_Vol(freq))
     
-    def Sortino_Ratio(self):
+    def Sortino_Ratio(self,freq):
         ret = np.log(self.data[1:]/self.data[:-1])-1
         neg_ret = ret[np.where(ret<0)]
         neg_vol = np.std(neg_ret)
-        return ((self.Annualized_GM()-(0.01))/neg_vol)
+        return ((self.Annualized_GM(freq)-(0.01))/neg_vol)
     
     def MaxDrawDown(self):
         mdd = 0
@@ -44,8 +44,8 @@ class Measures :
             mdd = dd
         return mdd
     
-    def CalmarRatio(self):
-        return (self.Annualized_GM() / self.MaxDrawDown())
+    def CalmarRatio(self,freq):
+        return (self.Annualized_GM(freq) / self.MaxDrawDown())
     
     
     

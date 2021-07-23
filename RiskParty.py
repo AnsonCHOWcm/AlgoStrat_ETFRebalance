@@ -22,7 +22,7 @@ def risk_parity(data):
     cov = data.cov()
     n = cov.shape[0]
     weights = np.ones(n)/n
-    cons = ({'type' : 'eq' , 'fun' :  lambda x : 1-sum(x)})
+    cons = ({'type' : 'ineq' , 'fun' :  lambda x : 1-sum(x)})
     bnds = [(0,1) for i in weights]
     res = minimize(risk_parity_function , x0=weights , args = (cov) , method = 'SLSQP' , constraints = cons , bounds = bnds , tol = 1e-30)
     return(res.x)

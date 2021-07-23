@@ -22,8 +22,8 @@ def Maximum_Sharpe_Ratio(data, long = 1):
  cov = data.cov()
  n = cov.shape[0]
  weights = np.ones(n) /n
- cons = ({'type': 'eq', 'fun': lambda x: 1 - sum(x)}) 
- bnds = [(0 ,0.5) for i in weights]
+ cons = ({'type': 'ineq', 'fun': lambda x: 1 - sum(x)}) 
+ bnds = [(0 ,1) for i in weights]
  if long == 1:
   res = minimize(Sharpe_Ratio_function, x0 = weights, args = (data), method = 'SLSQP', constraints = cons,
   bounds = bnds, tol = 1e-30)
