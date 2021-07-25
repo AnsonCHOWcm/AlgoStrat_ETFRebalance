@@ -25,7 +25,7 @@ class Measures :
         return(np.std(ret) * np.sqrt(252/freq))
     
     def Annualized_Sharpe(self , freq):
-        return((self.Annualized_GM(freq)-(0.016/12))/self.Annualized_Vol(freq))
+        return(self.Annualized_GM(freq)/self.Annualized_Vol(freq))
     
     def Sortino_Ratio(self,freq):
         ret = np.log(self.data[1:]/self.data[:-1])-1
